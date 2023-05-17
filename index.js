@@ -1,47 +1,57 @@
-const http = require('http')
 const fs = require('fs')
+const express = require('express')
+const morgan = require('morgan')
 
 const index = fs.readFileSync('index.html','utf-8')
 const data = JSON.parse(fs.readFileSync('data.json', 'utf-8')) 
 const products = data.products;
 
+const server = express();
 
-const server = http.createServer((req, res) =>{
-    console.log(req.url, req.method);
-    
-    if (req.url.startsWith('/product')) {
-        const id = req.url.split('/')[2] 
-        const product = products.find(p=>p.id===(+id))
-        console.log(product); 
-        res.setHeader('Content-Type','text/html');
-            let modifiedIndex = index
-            .replace('**title**',product.title)
-            .replace('**url**',product.thumbnail)
-            .replace('**price**',product.price)
-            .replace('**rating**',product.rating)
-            res.end(modifiedIndex) 
-            return     
-    }
-    // case '/product':
-    //         
-    //         break;
+server.use(express.json());
+// server.use(express.urlencoded());
 
-    
-    switch (req.url) {
-        case '/':
-          res.setHeader('Content-Type', 'text/html');
-          res.end(index);
-          break;
-        case '/api':
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify(data));
-          break;
-        
-        default:
-          res.writeHead(404);
-          res.end();
-      }
+server.use(morgan('dev'))
+server.use(express.static('public'));
 
+
+// server.use((req, res, next)=>{
+//   console.log(req.get('User-Agent'),req.method, req.ip, req.hostname);
+//   next();
+// })
+
+
+const auth = (req, res, next)=>{
+  // console.log(req.query);
+  if (req.body.password=='123') {
+    next()
+  }else{
+    res.sendStatus(401)
+  }
+}
+
+server.get('/product/:id',/* auth, */(req, res)=>{
+  console.log(req.params);
+  res.json({ type: 'GET'})
+});
+
+server.use(auth);
+
+
+server.get('/',auth,(req, res) => {
+  res.json({type:'GET'})
+})
+server.post('/',auth,(req, res) => {
+  res.json({type:'POST'})
 })
 
-server.listen(8080)
+server.get('/demo',(req, res) => {
+
+  // res.json(products)
+  res.status(200).send('<h1>Hello</h1>')
+  // res.sendFile('/home/rishav/rm/node_application/index.html')
+})
+
+server.listen(8080, () => {
+  console.log("Server Started");
+})
