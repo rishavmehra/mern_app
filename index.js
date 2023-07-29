@@ -9,44 +9,38 @@ const products = data.products;
 const server = express();
 
 server.use(express.json());
-// server.use(express.urlencoded());
 
 server.use(morgan('dev'))
 server.use(express.static('public'));
 
+//Create POST /products
+server.post('/products',(req, res) => {
+  console.log(req.body);
+  products.push(req.body)
+  res.json(req.body);
+})
 
-// server.use((req, res, next)=>{
-//   console.log(req.get('User-Agent'),req.method, req.ip, req.hostname);
-//   next();
-// })
-
-
-const auth = (req, res, next)=>{
-  // console.log(req.query);
-  if (req.body.password=='123') {
-    next()
-  }else{
-    res.sendStatus(401)
-  }
-}
-
-server.get('/product/:id',/* auth, */(req, res)=>{
-  console.log(req.params);
-  res.json({ type: 'GET'})
+// Read GET /products
+server.get('/products',(req, res)=>{
+  res.json(products)
+});
+// Read GET /products/:id
+server.get('/products/:id',(req, res)=>{
+  const  id = +req.params.id;
+  const product = products.find(p=>p.id===id)
+  res.json(product)
 });
 
-server.use(auth);
+// Update PUT /products/:id
+server.put ('/products/:id',(req, res)=>{
+  const  id = +req.params.id;
+  const product = products.find(p=>p.id===id)
+  
+  res.json(product)
+});
 
-
-server.get('/',auth,(req, res) => {
-  res.json({type:'GET'})
-})
-server.post('/',auth,(req, res) => {
-  res.json({type:'POST'})
-})
 
 server.get('/demo',(req, res) => {
-
   // res.json(products)
   res.status(200).send('<h1>Hello</h1>')
   // res.sendFile('/home/rishav/rm/node_application/index.html')
